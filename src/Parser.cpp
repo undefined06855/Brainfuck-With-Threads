@@ -207,7 +207,7 @@ void bf::Parser::parse() {
                 unsigned char count = m_data[m_dataPointer + 1];
 
                 if (m_dataPointer + 2 + count > m_data.size()) {
-                    std::println("Syscall not given enough space for arguments!");
+                    std::println("Syscall not given enough space for arguments!!");
                     return;
                 }
 
