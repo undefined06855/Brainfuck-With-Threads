@@ -8,7 +8,7 @@ call socket(2 1 0) to get socket fd
 <<<<<<<<!
 
 for connect it's more complex
-connect(socket_fd &sockaddr_in sizeof(sockaddr_in))
+connect(socket_fd sockaddr_in sizeof(sockaddr_in))
 cell    45  46  47  48  49  50  51  52  53  54  55  56  57  58  59
 value   42   3   1  fd   2   ?   ?   ?   ?   ?   ?   ?   ?   1  16
 

@@ -296,6 +296,7 @@ void bf::Parser::parse() {
                 }
 
                 uintptr_t ptr = (uintptr_t)(&m_data[m_dataPointer]);
+                std::println("address calculated to be {}", ptr);
 
                 unsigned int shift = (sizeOfPointer * 8) - 8;
                 for (int i = m_dataPointer; i < sizeOfPointer; i++) {
