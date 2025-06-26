@@ -1,3 +1,8 @@
+[
+  This will try its hardest to send a get request to 127.0.0.1:3000
+  obviously uses syscalls so linux only!
+]
+
 call socket(2 1 0) to get socket fd
 +++++++++++++++++++++++++++++++++++++++++> syscall 41
 +++> three params
