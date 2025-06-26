@@ -74,6 +74,7 @@ void bf::Parser::parse() {
             case '.': {
                 if (m_parent) {
                     // output to parent if this is a thread
+                    // (wait for flag to be set)
                     m_parent->m_awaitingInput.wait(false);
                     m_parent->input(m_data[m_dataPointer]);
                 } else {
@@ -90,6 +91,7 @@ void bf::Parser::parse() {
                     std::println("Taking input from console is not implemented yet!");
                 } else {
                     // wait for input from child threads
+                    // (wait for flag to be cleared)
                     m_awaitingInput.test_and_set();
                     m_awaitingInput.notify_all();
                     m_awaitingInput.wait(true);
