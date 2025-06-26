@@ -263,13 +263,13 @@ void bf::Parser::parse() {
 
 #ifdef ALLOW_SYSCALLS
                 switch (params.size()) {
-                    case 0: ret = syscall(number);
-                    case 1: ret = syscall(number, params[0]);
-                    case 2: ret = syscall(number, params[0], params[1]);
-                    case 3: ret = syscall(number, params[0], params[1], params[2]);
-                    case 4: ret = syscall(number, params[0], params[1], params[2], params[3]);
-                    case 5: ret = syscall(number, params[0], params[1], params[2], params[3], params[4]);
-                    case 6: ret = syscall(number, params[0], params[1], params[2], params[3], params[4], params[5]);
+                    case 0: ret = syscall(number); break;
+                    case 1: ret = syscall(number, params[0]); break;
+                    case 2: ret = syscall(number, params[0], params[1]); break;
+                    case 3: ret = syscall(number, params[0], params[1], params[2]); break;
+                    case 4: ret = syscall(number, params[0], params[1], params[2], params[3]); break;
+                    case 5: ret = syscall(number, params[0], params[1], params[2], params[3], params[4]); break;
+                    case 6: ret = syscall(number, params[0], params[1], params[2], params[3], params[4], params[5]); break;
                 }
 #else
                 std::println("Syscall {} not available on platform! params ({}):", number, count);
