@@ -277,7 +277,6 @@ void bf::Parser::parse() {
                     std::println("    {}: {:#x}", i, params[i]);
                 }
 #endif
-                std::println("syscall {} returned {}", number, ret);
                 m_data[m_dataPointer] = ret;
 
                 break;
@@ -296,12 +295,10 @@ void bf::Parser::parse() {
                 }
 
                 uintptr_t ptr = (uintptr_t)(&m_data[m_dataPointer]);
-                std::println("address calculated to be {:#x}", ptr);
 
                 unsigned int shift = (sizeOfPointer * 8) - 8;
                 for (int i = 0; i < sizeOfPointer; i++) {
                     m_data[m_dataPointer + i] = (ptr >> shift) & 0xff;
-                    std::println("cell {} = {:#x}", m_dataPointer + i, (ptr >> shift) & 0xff);
                     shift -= 8;
                 }
 
