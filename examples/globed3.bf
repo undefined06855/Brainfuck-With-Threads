@@ -175,6 +175,7 @@ but clear cell 4 first idk what's in it
 >>>
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<[-]>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 [-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]
+<<<
 
 next we read
 we can read just to the same buffer as the address to reduce having to copy around addresses
@@ -187,7 +188,7 @@ set cell 45 to 0
 we dont mind overrunning our "buffer" so we can set the buffer size to 255
 
 set cell 59 from 35 to 255 by decrementing 36
->>>>>>>>>>>>>
+>>>>>>>>>>>>>>
 ------------------------------------
 
 go to cell 45 and syscall
