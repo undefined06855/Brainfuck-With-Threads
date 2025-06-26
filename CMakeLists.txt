@@ -3,5 +3,9 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(BF2)
 
+if (UNIX)
+    add_definitions(-DALLOW_SYSCALLS)
+endif()
+
 file(GLOB_RECURSE sources src/*.cpp)
 add_executable(BF2 ${sources})

@@ -1,4 +1,10 @@
 #include "Parser.hpp"
+#include <span>
+
+#ifdef ALLOW_SYSCALLS
+// #include <sys/syscall.h> // for constants
+#include <unistd.h>
+#endif
 
 bf::Parser::Parser(std::string_view path)
     : m_path(path)
@@ -143,7 +149,7 @@ void bf::Parser::parse() {
             case '{': {
                 // begin thread
                 auto start = m_stream.tellg();
-                char param = m_data[m_dataPointer];
+                unsigned char param = m_data[m_dataPointer];
 
                 std::thread([start, param, this]{
                     auto child = std::make_shared<bf::Parser>(m_path);
@@ -186,6 +192,45 @@ void bf::Parser::parse() {
                 m_parent->m_childCount--;
 
                 return;
+            }
+
+            case '!': {
+                // syscall!
+                if (m_dataPointer + 1 >= m_data.size()) {
+                    std::println("Syscall not given enough space for parameters!!");
+                    return;
+                }
+
+                unsigned char number = m_data[m_dataPointer];
+                unsigned char count = m_data[m_dataPointer + 1];
+
+                if (m_dataPointer + 2 + count > m_data.size()) {
+                    std::println("Syscall not given enough space for arguments!");
+                    return;
+                }
+
+                auto params = std::span(m_data).subspan(m_dataPointer + 2, count);
+
+                unsigned char ret;
+
+#ifdef ALLOW_SYSCALLS
+                switch (params.size()) {
+                    case 0: ret = syscall(number);
+                    case 1: ret = syscall(number, params[0]);
+                    case 2: ret = syscall(number, params[0], params[1]);
+                    case 3: ret = syscall(number, params[0], params[1], params[2]);
+                    case 4: ret = syscall(number, params[0], params[1], params[2], params[3]);
+                    case 5: ret = syscall(number, params[0], params[1], params[2], params[3], params[4]);
+                    case 6: ret = syscall(number, params[0], params[1], params[2], params[3], params[4], params[5]);
+                }
+#else
+                std::println("syscall {} not available on platform! params:", number);
+                for (auto param : params) {
+                    std::println("    {}", param);
+                }
+                ret = 0;
+#endif
+                m_data[m_dataPointer] = ret;
             }
         }
     }

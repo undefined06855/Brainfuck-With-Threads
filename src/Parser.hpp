@@ -18,7 +18,7 @@ public:
     std::array<unsigned char, 30'000> m_data;
     unsigned int m_dataPointer;
     bool m_awaitingInput;
-    
+
     bf::Parser* m_parent;
     unsigned int m_childCount;
 
