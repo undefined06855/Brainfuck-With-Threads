@@ -274,7 +274,7 @@ void bf::Parser::parse() {
 #else
                 std::println("Syscall {} not available on platform! params ({}):", number, count);
                 for (int i = 0; i < count; i++) {
-                    std::println("    {}: {}", i, params[i]);
+                    std::println("    {}: {:#x}", i, params[i]);
                 }
 #endif
                 std::println("syscall {} returned {}", number, ret);
@@ -296,11 +296,12 @@ void bf::Parser::parse() {
                 }
 
                 uintptr_t ptr = (uintptr_t)(&m_data[m_dataPointer]);
-                std::println("address calculated to be {}", ptr);
+                std::println("address calculated to be {:#x}", ptr);
 
                 unsigned int shift = (sizeOfPointer * 8) - 8;
-                for (int i = m_dataPointer; i < sizeOfPointer; i++) {
+                for (int i = 0; i < sizeOfPointer; i++) {
                     m_data[m_dataPointer + i] = (ptr >> shift) & 0xff;
+                    std::println("cell {} = {:#x}", m_dataPointer + i, (ptr >> shift) & 0xff);
                     shift -= 8;
                 }
 

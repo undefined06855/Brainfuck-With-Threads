@@ -1,5 +1,5 @@
 call socket(2 1 0) to get socket fd
-+++++++++++++++++++++++++++++++++++++++++>
++++++++++++++++++++++++++++++++++++++++++> syscall 41
 +++> three params
 + > ++> two (int)
 + > +> one (int)
@@ -8,7 +8,7 @@ call socket(2 1 0) to get socket fd
 <<<<<<<<!
 
 for connect it's more complex
-connect(socket_fd sockaddr_in sizeof(sockaddr_in))
+connect(socket_fd (address of)sockaddr_in sizeof(sockaddr_in))
 cell    45  46  47  48  49  50  51  52  53  54  55  56  57  58  59
 value   42   3   1  fd   2   ?   ?   ?   ?   ?   ?   ?   ?   1  16
 
@@ -118,10 +118,10 @@ set cell 45 to 1
 
 now we need to fill cell 10 with the string data before doing the syscall
 but clear every cell as we go past
-<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]
+<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]
 
-now fill cell 10 to 45 with the string data
-GET / HTTP/1(dot)1\r\nHost: 127(dot)0(dot)0(dot)1\r\n\r\n
+now fill cell 10 to 42 with the string data
+GET / HTTP/1(dot)1\r\nHost: 127(dot)0(dot)0(dot)1\r\n
 
 GET
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -163,12 +163,10 @@ Host:
 \r\n
 >+++++++++++++
 >++++++++++
->+++++++++++++
->++++++++++
 
-we're now at cell 35 at the end of the string
+we're now at cell 42 at the end of the string
 go to cell 45 and syscall
->>>>>>>>>>!
+>>!
 
 
 before reading copy our fd to somewhere where the buffer wont overrun it
