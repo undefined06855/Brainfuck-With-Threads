@@ -1,5 +1,7 @@
 #include "Parser.hpp"
 #include <span>
+#include <utility>
+#include <memory>
 
 #ifdef ALLOW_SYSCALLS
 // #include <sys/syscall.h> // for constants

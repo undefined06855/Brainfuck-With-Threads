@@ -1,5 +1,6 @@
 #include "Parser.hpp"
 #include <filesystem>
+#include <memory>
 
 int main(int argc, char** argv) {
     g_mainThreadID = std::this_thread::get_id();
