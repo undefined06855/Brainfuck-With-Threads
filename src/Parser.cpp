@@ -1,7 +1,7 @@
 #include "Parser.hpp"
 #include <vector>
-#include <utility>
 #include <memory>
+#include <thread>
 
 #ifdef ALLOW_SYSCALLS
 // #include <sys/syscall.h> // for constants
@@ -15,7 +15,7 @@ bf::Parser::Parser(std::string_view path)
     , m_data({})
     , m_dataPointer(0)
 
-    , m_awaitingInput(false)
+    , m_awaitingInput()
 
     , m_parent(nullptr)
     , m_childCount(0) {
@@ -74,7 +74,7 @@ void bf::Parser::parse() {
             case '.': {
                 if (m_parent) {
                     // output to parent if this is a thread
-                    while (!m_parent->m_awaitingInput) { /* spin */ }
+                    m_parent->m_awaitingInput.wait(false);
                     m_parent->input(m_data[m_dataPointer]);
                 } else {
                     // output to console if this is main thread
@@ -90,8 +90,9 @@ void bf::Parser::parse() {
                     std::println("Taking input from console is not implemented yet!");
                 } else {
                     // wait for input from child threads
-                    m_awaitingInput = true;
-                    while (m_awaitingInput) { /* spin */ }
+                    m_awaitingInput.test_and_set();
+                    m_awaitingInput.notify_all();
+                    m_awaitingInput.wait(true);
                 }
 
                 break;
@@ -308,14 +309,9 @@ void bf::Parser::parse() {
     }
 }
 
+// note that this is called from inside the thread
 void bf::Parser::input(char input) {
-    if (!m_awaitingInput) {
-        // should check if awaiting input before calling input
-        // would only get here if some weird timing stuff happens
-        std::unreachable();
-        return;
-    }
-
     m_data[m_dataPointer] = input;
-    m_awaitingInput = false;
+    m_awaitingInput.clear();
+    m_awaitingInput.notify_all();
 }

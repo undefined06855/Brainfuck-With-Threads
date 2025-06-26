@@ -2,9 +2,7 @@
 #include <fstream>
 #include <print>
 #include <array>
-#include <thread>
-
-static std::thread::id g_mainThreadID;
+#include <atomic>
 
 namespace bf {
 
@@ -17,7 +15,8 @@ public:
 
     std::array<unsigned char, 30'000> m_data;
     unsigned int m_dataPointer;
-    bool m_awaitingInput;
+
+    std::atomic_flag m_awaitingInput;
 
     bf::Parser* m_parent;
     unsigned int m_childCount;

@@ -3,8 +3,6 @@
 #include <memory>
 
 int main(int argc, char** argv) {
-    g_mainThreadID = std::this_thread::get_id();
-
     if (argc < 2) {
         std::println("Please provide an input file!");
         std::println("Usage: bf2 <input>");
