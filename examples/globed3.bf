@@ -118,7 +118,7 @@ set cell 45 to 1
 
 now we need to fill cell 10 with the string data before doing the syscall
 but clear every cell as we go past
-<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]
+<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]<[-]
 
 now fill cell 10 to 42 with the string data
 GET / HTTP/1(dot)1\r\nHost: 127(dot)0(dot)0(dot)1\r\n
@@ -166,7 +166,7 @@ Host:
 
 we're now at cell 42 at the end of the string
 go to cell 45 and syscall
->>!
+>>>!
 
 
 before reading copy our fd to somewhere where the buffer wont overrun it
