@@ -31,7 +31,31 @@ then take ten from the thread into the current cell
 ,
 ```
 
-This also allows syscalls on linux, using `!`, with the type, param count and parameters in subsequent cells, though this is so far untested!
+This also allows syscalls on linux, using `!`, with the type, param count and parameters in subsequent cells!
+
+```bf
+cell layout for this
+| type | params | type | data | type | data                          | type | data       |
+| 5    | 3      | 1    | 2    | 2    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 2    | address... |
+
+example syscall five
++++++ >
+which takes three parameters
++++ >
+the first being an integer 2
++ > ++ >
+the second being a long 0x0101010101010101
+++ > + > + > + > + > + > + > + > + >
+the third being a pointer to the sixth cell
+++ > &
+
+then go back to first cell and call
+<<<<<<<<<<<<<< !
+```
+
+Types of parameters you can send to syscalls are:
+- char (1), takes up one cell
+- long (2), takes up four or eight cells depending on platform, used for pointers
 
 Examples are in the examples directory!
 

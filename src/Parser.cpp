@@ -1,5 +1,5 @@
 #include "Parser.hpp"
-#include <span>
+#include <vector>
 #include <utility>
 #include <memory>
 
@@ -205,15 +205,61 @@ void bf::Parser::parse() {
 
                 unsigned char number = m_data[m_dataPointer];
                 unsigned char count = m_data[m_dataPointer + 1];
+                auto sizeOfPointer = sizeof(void*);
+                
+                // parse parameters
+                std::vector<uintptr_t> params = {};
 
-                if (m_dataPointer + 2 + count > m_data.size()) {
-                    std::println("Syscall not given enough space for arguments!!");
-                    return;
+                unsigned int parsedParams = 0;
+                unsigned int offset = m_dataPointer + 2;
+                while (parsedParams < count) {
+                    if (offset + 1 >= m_data.size()) {
+                        std::println("Syscall not given enough space for varargs!!");
+                        return;
+                    }
+
+                    auto type = m_data[offset++];
+                    switch (type) {
+                        case 1: {
+                            // normal integer, very nice
+                            if (offset + 1 >= m_data.size()) {
+                                std::println("Syscall not given enough space for varargs!!");
+                                return;
+                            }
+
+                            params.push_back(m_data[offset++]);
+                            break;
+                        }
+
+                        case 2: {
+                            // pointer!
+                            if (offset + sizeOfPointer >= m_data.size()) {
+                                std::println("Syscall not given enough space for varargs!!");
+                                return;
+                            }
+
+                            uintptr_t result = 0x0;
+                            unsigned int shift = (sizeOfPointer * 8) - 8;
+                            for (int i = 0; i < sizeOfPointer; i++) {
+                                result += (uintptr_t)m_data[offset++] << shift;
+                                shift -= 8;
+                            }
+
+                            params.push_back(result);
+                            break;
+                        }
+
+                        default: {
+                            // unknown type
+                            std::println("Unknown syscall parameter type: {}!!", type);
+                            return;
+                        }
+                    }
+
+                    parsedParams++;
                 }
 
-                auto params = std::span(m_data).subspan(m_dataPointer + 2, count);
-
-                unsigned char ret;
+                unsigned char ret = 0;
 
 #ifdef ALLOW_SYSCALLS
                 switch (params.size()) {
@@ -226,13 +272,37 @@ void bf::Parser::parse() {
                     case 6: ret = syscall(number, params[0], params[1], params[2], params[3], params[4], params[5]);
                 }
 #else
-                std::println("syscall {} not available on platform! params ({}):", number, count);
-                for (auto param : params) {
-                    std::println("    {}", param);
+                std::println("Syscall {} not available on platform! params ({}):", number, count);
+                for (int i = 0; i < count; i++) {
+                    std::println("    {}: {}", i, params[i]);
                 }
-                ret = 0;
 #endif
                 m_data[m_dataPointer] = ret;
+
+                break;
+            }
+
+            case '&': {
+                // address of
+                // returns actual memory address of current cell
+                // uses next sizeof(ptr) bytes
+
+                auto sizeOfPointer = sizeof(void*);
+
+                if (m_dataPointer + sizeOfPointer >= m_data.size()) {
+                    std::println("Addressof not given enough space for return!");
+                    return;
+                }
+
+                uintptr_t ptr = (uintptr_t)(&m_data[m_dataPointer]);
+
+                unsigned int shift = (sizeOfPointer * 8) - 8;
+                for (int i = m_dataPointer; i < sizeOfPointer; i++) {
+                    m_data[m_dataPointer + i] = (ptr >> shift) & 0xff;
+                    shift -= 8;
+                }
+
+                break;
             }
         }
     }
