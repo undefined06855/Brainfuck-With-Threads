@@ -3,6 +3,8 @@
 #include <memory>
 
 int main(int argc, char** argv) {
+    std::println("Brainfuck With Threads v1.0.0");
+
     if (argc < 2) {
         std::println("Please provide an input file!");
         std::println("Usage: bf2 <input>");
