@@ -259,7 +259,7 @@ void bf::Parser::parse() {
                     parsedParams++;
                 }
 
-                unsigned char ret = 0;
+                unsigned char ret = 0x69;
 
 #ifdef ALLOW_SYSCALLS
                 switch (params.size()) {
