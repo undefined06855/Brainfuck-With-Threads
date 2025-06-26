@@ -277,6 +277,7 @@ void bf::Parser::parse() {
                     std::println("    {}: {}", i, params[i]);
                 }
 #endif
+                std::println("syscall {} returned {}", number, ret);
                 m_data[m_dataPointer] = ret;
 
                 break;
