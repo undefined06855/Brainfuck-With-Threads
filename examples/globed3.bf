@@ -180,7 +180,9 @@ copying is so hard we have to move to cell 3 and 4
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 then move cell 3 back
 [->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<]
-<<<
+somewhere in all of this there's an off by one error so we need to subtract one from the fd
+but its fine it works this is the worst bf ive ever written
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>-<<<
 
 next we read
 we can read just to the same buffer as the address to reduce having to copy around addresses
