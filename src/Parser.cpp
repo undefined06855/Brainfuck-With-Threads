@@ -70,7 +70,7 @@ void bf::Parser::parse() {
                     m_parent->input(m_data[m_dataPointer]);
                 } else {
                     // output to console if this is main thread
-                    std::print("{} ({})", static_cast<char>(m_data[m_dataPointer]), m_data[m_dataPointer]);
+                    std::print("{}", static_cast<char>(m_data[m_dataPointer]));
                 }
 
                 break;
@@ -143,8 +143,11 @@ void bf::Parser::parse() {
             case '{': {
                 // begin thread
                 auto start = m_stream.tellg();
-                std::thread([start, this]{
+                char param = m_data[m_dataPointer];
+
+                std::thread([start, param, this]{
                     auto child = std::make_shared<bf::Parser>(m_path);
+                    child->m_data[0] = param; // pass in param
                     child->m_parent = this;
                     child->m_stream.seekg(start);
                     child->parse();
