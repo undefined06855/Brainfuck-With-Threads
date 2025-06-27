@@ -1,7 +1,13 @@
 [
-    This will call raise with 2 as the first parameter from libc.so.6
-]
+    This will call raise with 4 (sigill) as the first parameter from libc.so.6
 
+    thing to generate brainfuck string from text
+    string = "raise"
+    navigator.clipboard.writeText(string.split("").map(char => {
+        return ">" + "+".repeat(char.charCodeAt(0))
+    }).join("\n") + "\n" + "<".repeat(string.length - 1))
+    remember to remove the first > though
+]
 
 
 go to cell 40 and take the address of it
@@ -52,8 +58,8 @@ now fill cell 60 onwards with function string "raise"
 >+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 <<<<
 
-go to cell 19 and set 2 (argument)
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ++
+go to cell 19 and set 4 (argument)
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ++++
 
 go to cell 18 and set 1
 < +
