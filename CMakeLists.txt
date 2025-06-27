@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(BF2)
 
 if (UNIX)
-    add_definitions(-DALLOW_SYSCALLS)
+    add_definitions(-DIS_LINUX)
 endif()
 
 file(GLOB_RECURSE sources src/*.cpp)

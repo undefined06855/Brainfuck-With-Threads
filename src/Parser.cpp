@@ -3,9 +3,12 @@
 #include <memory>
 #include <thread>
 
-#ifdef ALLOW_SYSCALLS
+#ifdef IS_LINUX
 // #include <sys/syscall.h> // for constants
-#include <unistd.h>
+#include <unistd.h> // for syscalls
+#include <dlfcn.h> // for dlopen
+#else
+#include <windows.h> // for getmodulehandle/getprocaddress
 #endif
 
 bf::Parser::Parser(std::string_view path)
@@ -18,12 +21,25 @@ bf::Parser::Parser(std::string_view path)
     , m_awaitingInput()
 
     , m_parent(nullptr)
-    , m_childCount(0) {
+    , m_childCount(0)
     
+    , m_moduleHandles({}) {
     m_stream.open(path.data());
     if (!m_stream) {
         std::println("Could not open path!!");
         return;
+    }
+}
+
+bf::Parser::~Parser() {
+    // free all handles cross-platform
+
+    for (auto handle : m_moduleHandles) {
+#ifdef IS_LINUX
+        dlclose(handle);
+#else
+        FreeLibrary((HMODULE)handle);
+#endif
     }
 }
 
@@ -201,70 +217,13 @@ void bf::Parser::parse() {
 
             case '!': {
                 // syscall!
-                if (m_dataPointer + 1 >= m_data.size()) {
-                    std::println("Syscall not given enough space for parameters!!");
-                    return;
-                }
-
-                unsigned char number = m_data[m_dataPointer];
-                unsigned char count = m_data[m_dataPointer + 1];
-                auto sizeOfPointer = sizeof(void*);
                 
-                // parse parameters
-                std::vector<uintptr_t> params = {};
+                unsigned char number = m_data[m_dataPointer];
+                unsigned char ret = 0x0;
 
-                unsigned int parsedParams = 0;
-                unsigned int offset = m_dataPointer + 2;
-                while (parsedParams < count) {
-                    if (offset + 1 >= m_data.size()) {
-                        std::println("Syscall not given enough space for varargs!!");
-                        return;
-                    }
+                auto params = consumeFunctionParameters(m_dataPointer + 1);
 
-                    auto type = m_data[offset++];
-                    switch (type) {
-                        case 1: {
-                            // normal integer, very nice
-                            if (offset + 1 >= m_data.size()) {
-                                std::println("Syscall not given enough space for varargs!!");
-                                return;
-                            }
-
-                            params.push_back(m_data[offset++]);
-                            break;
-                        }
-
-                        case 2: {
-                            // pointer!
-                            if (offset + sizeOfPointer >= m_data.size()) {
-                                std::println("Syscall not given enough space for varargs!!");
-                                return;
-                            }
-
-                            uintptr_t result = 0x0;
-                            unsigned int shift = (sizeOfPointer * 8) - 8;
-                            for (int i = 0; i < sizeOfPointer; i++) {
-                                result += (uintptr_t)m_data[offset++] << shift;
-                                shift -= 8;
-                            }
-
-                            params.push_back(result);
-                            break;
-                        }
-
-                        default: {
-                            // unknown type
-                            std::println("Unknown syscall parameter type: {}!!", type);
-                            return;
-                        }
-                    }
-
-                    parsedParams++;
-                }
-
-                unsigned char ret = 0x69;
-
-#ifdef ALLOW_SYSCALLS
+#ifdef IS_LINUX
                 switch (params.size()) {
                     case 0: ret = syscall(number); break;
                     case 1: ret = syscall(number, params[0]); break;
@@ -275,8 +234,8 @@ void bf::Parser::parse() {
                     case 6: ret = syscall(number, params[0], params[1], params[2], params[3], params[4], params[5]); break;
                 }
 #else
-                std::println("Syscall {} not available on platform! params ({}):", number, count);
-                for (int i = 0; i < count; i++) {
+                std::println("Syscall {} not available on platform! params ({}):", number, params.size());
+                for (int i = 0; i < params.size(); i++) {
                     std::println("    {}: {:#x}", i, params[i]);
                 }
 #endif
@@ -297,12 +256,70 @@ void bf::Parser::parse() {
                     return;
                 }
 
-                uintptr_t ptr = (uintptr_t)(&m_data[m_dataPointer]);
+                encodePointer((uintptr_t)&m_data[m_dataPointer]);
 
-                unsigned int shift = (sizeOfPointer * 8) - 8;
-                for (int i = 0; i < sizeOfPointer; i++) {
-                    m_data[m_dataPointer + i] = (ptr >> shift) & 0xff;
-                    shift -= 8;
+                break;
+            }
+
+            case '$': {
+                // call c function
+                auto sizeOfPointer = sizeof(void*);
+
+                if (m_dataPointer + sizeOfPointer + sizeOfPointer >= m_data.size()) {
+                    std::println("Function call not given enough space for parameters!!");
+                    return;
+                }
+
+
+                // do we actually trust these? probably not but uh it doesnt
+                // really matter
+                const char* library = (char*)decodePointer(m_dataPointer);
+                const char* function = (char*)decodePointer(m_dataPointer + sizeof(void*));
+
+                auto params = consumeFunctionParameters(m_dataPointer + sizeof(void*) + sizeof(void*));
+
+                std::println("Calling function {} from library {} with {} params", function, library, params.size());
+
+#ifdef IS_LINUX
+                dlerror();
+
+                auto handle = dlopen(library, RTLD_LAZY);
+                if (auto err = dlerror()) {
+                    std::println("Failed to open library {}!! ({})", library, err);
+                    return;
+                }
+                m_moduleHandles.push_back(handle);
+
+                void* address = dlsym(handle, function);
+                if (auto err = dlerror()) {
+                    std::println("Failed to find function {}!! ({})", function, err);
+                }
+
+
+#else
+                auto handle = LoadLibraryA(library);
+                if (!handle) {
+                    std::println("Failed to open library {}!!", library);
+                    return;
+                }
+                m_moduleHandles.push_back((void*)handle);
+
+                void* address = (void*)GetProcAddress(handle, function);
+                if (!address) {
+                    std::println("Failed to find function {}!!", function);
+                    return;
+                }
+#endif
+
+                // call address (void*)
+                switch (params.size()) {
+                    case 0: ((functionWithZeroParams*)(address))(); break;
+                    case 1: ((functionWithOneParam*)(address))(params[0]); break;
+                    case 2: ((functionWithTwoParams*)(address))(params[0], params[1]); break;
+                    case 3: ((functionWithThreeParams*)(address))(params[0], params[1], params[2]); break;
+                    case 4: ((functionWithFourParams*)(address))(params[0], params[1], params[2], params[3]); break;
+                    case 5: ((functionWithFiveParams*)(address))(params[0], params[1], params[2], params[3], params[4]); break;
+                    case 6: ((functionWithSixParams*)(address))(params[0], params[1], params[2], params[3], params[4], params[5]); break;
                 }
 
                 break;
@@ -316,4 +333,80 @@ void bf::Parser::input(char input) {
     m_data[m_dataPointer] = input;
     m_awaitingInput.clear();
     m_awaitingInput.notify_all();
+}
+
+std::vector<uintptr_t> bf::Parser::consumeFunctionParameters(unsigned int offset) {
+    if (offset + 1 >= m_data.size()) {
+        std::println("Not given enough space for parameters!!");
+        return {};
+    }
+
+    unsigned char count = m_data[offset++];
+    auto sizeOfPointer = sizeof(void*);
+    
+    // parse parameters
+    std::vector<uintptr_t> params = {};
+
+    unsigned int parsedParams = 0;
+    while (parsedParams < count) {
+        if (offset + 1 >= m_data.size()) {
+            std::println("Not given enough space for varargs!!");
+            return {};
+        }
+
+        auto type = m_data[offset++];
+        switch (type) {
+            case 1: {
+                // normal integer, very nice
+                if (offset + 1 >= m_data.size()) {
+                    std::println("Not given enough space for varargs!!");
+                    return {};
+                }
+
+                params.push_back(m_data[offset++]);
+                break;
+            }
+
+            case 2: {
+                // pointer!
+                if (offset + sizeOfPointer >= m_data.size()) {
+                    std::println("Not given enough space for varargs!!");
+                    return {};
+                }
+
+                params.push_back(decodePointer(offset));
+                offset += sizeOfPointer;
+                break;
+            }
+
+            default: {
+                // unknown type
+                std::println("Unknown parameter type: {}!!", type);
+                return {};
+            }
+        }
+
+        parsedParams++;
+    }
+
+    return params;
+}
+
+void bf::Parser::encodePointer(uintptr_t pointer) {
+    unsigned int shift = (sizeof(void*) * 8) - 8;
+    for (int i = 0; i < sizeof(void*); i++) {
+        m_data[m_dataPointer + i] = (pointer >> shift) & 0xff;
+        shift -= 8;
+    }
+}
+
+uintptr_t bf::Parser::decodePointer(unsigned int offset) {
+    uintptr_t result = 0x0;
+    unsigned int shift = (sizeof(void*) * 8) - 8;
+    for (int i = 0; i < sizeof(void*); i++) {
+        result += (uintptr_t)m_data[offset++] << shift;
+        shift -= 8;
+    }
+
+    return result;
 }

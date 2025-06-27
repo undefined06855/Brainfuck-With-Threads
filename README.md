@@ -53,7 +53,15 @@ then go back to first cell and call
 <<<<<<<<<<<<<< !
 ```
 
-Types of parameters you can send to syscalls are:
+...as well as other functions cross-platform using `$`:
+```bf
+| address of string of library name | address of string of function name | params | type | data |
+
+need to write example for this probably
+
+```
+
+Types of parameters you can send to functions are:
 - char (1), takes up one cell
 - long (2), takes up four or eight cells depending on platform, used for pointers
 
