@@ -67,4 +67,4 @@ Types of parameters you can send to functions are:
 
 Examples are in the examples directory!
 
-Build with CMake as you normally would, zero dependencies or setup or anything needed.
+Build with CMake as you normally would, zero dependencies or setup or anything needed, but prebuilt binaries are available for Windows in the [releases tab](https://github.com/undefined06855/Brainfuck-With-Threads/releases), if you trust I haven't put malware into them.
